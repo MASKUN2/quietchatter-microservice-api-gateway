@@ -6,21 +6,29 @@ spring:
     name: microservice-gateway
   config:
     import: "optional:consul:"
+  data:
+    redis:
+      host: localhost
+      port: 6379
   cloud:
     gateway:
       routes:
-        - id: user-service
-          uri: lb://microservice-user
+        - id: member-service
+          uri: lb://microservice-member
           predicates:
-            - Path=/api/v1/users/**
+            - Path=/v1/auth/**,/v1/me/**
         - id: book-service
           uri: lb://microservice-book
           predicates:
-            - Path=/api/v1/books/**
+            - Path=/v1/books/**
         - id: talk-service
           uri: lb://microservice-talk
           predicates:
-            - Path=/api/v1/talks/**
+            - Path=/v1/talks/**,/v1/reactions/**
+        - id: customer-service
+          uri: lb://microservice-customer
+          predicates:
+            - Path=/v1/customer/**
       discovery:
         locator:
           enabled: true
