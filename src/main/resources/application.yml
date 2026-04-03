@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: microservice-gateway
+  config:
+    import: "optional:consul:"
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://microservice-user
+          predicates:
+            - Path=/api/v1/users/**
+        - id: book-service
+          uri: lb://microservice-book
+          predicates:
+            - Path=/api/v1/books/**
+        - id: talk-service
+          uri: lb://microservice-talk
+          predicates:
+            - Path=/api/v1/talks/**
+      discovery:
+        locator:
+          enabled: true
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        service-name: microservice-gateway
+        instance-id: ${spring.application.name}:${server.port}
+
+jwt:
+  secret-key: your-very-long-secret-key-at-least-32-chars-long
+
+app:
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
+      - "https://your-frontend-domain.com"
