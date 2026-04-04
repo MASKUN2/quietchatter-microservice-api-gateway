@@ -23,8 +23,8 @@ class AuthenticationFilter(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val bypassPaths = listOf("/v1/auth", "/v1/customer")
-    private val optionalPaths = listOf("/v1/books", "/v1/talks")
+    private val bypassPaths = listOf("/v1/auth/login", "/v1/auth/signup", "/v1/auth/reactivate", "/v1/customer")
+    private val optionalPaths = listOf("/v1/books", "/v1/talks", "/v1/auth/me")
 
     override fun filter(exchange: ServerWebExchange, chain: GatewayFilterChain): Mono<Void> {
         val path = exchange.request.path.value()

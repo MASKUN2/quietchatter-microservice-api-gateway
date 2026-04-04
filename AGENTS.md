@@ -44,7 +44,7 @@ Spring Cloud Gateway는 필터 체인 기반으로 동작합니다.
 ### C. 보안 규칙
 
 * 다운스트림 서비스는 Gateway를 통해서만 접근 가능해야 합니다.
-* JWT 검증 성공 시 `X-Member-Id` 헤더에 사용자 ID(UUID)를 추가합니다.
+* JWT 검증 성공 시 `X-Member-Id` 헤더에 회원 ID(UUID)를 추가합니다.
 * 다운스트림 서비스에서 발생한 `X-Member-Id` 헤더를 외부에서 직접 주입하는 요청은 차단하십시오.
 
 ### D. 문서 규칙
