@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: microservice-gateway
+    name: microservice-api-gateway
   config:
     import: "optional:consul:"
   data:
@@ -38,7 +38,7 @@ spring:
       host: ${CONSUL_HOST:localhost}
       port: 8500
       discovery:
-        service-name: microservice-gateway
+        service-name: microservice-api-gateway
         instance-id: ${spring.application.name}:${server.port}
 
 jwt:

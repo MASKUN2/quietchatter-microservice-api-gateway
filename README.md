@@ -1,4 +1,4 @@
-# microservice-gateway (QuietChatter API Gateway)
+# microservice-api-gateway (QuietChatter Microservice)
 
 이 저장소는 QuietChatter 프로젝트의 API Gateway 서비스입니다.
 JDK 21의 **가상 스레드(Virtual Threads)**와 **Spring Cloud Gateway MVC**를 기반으로 구축되어, 높은 처리 성능과 직관적인 동기식 코드를 동시에 제공합니다.
