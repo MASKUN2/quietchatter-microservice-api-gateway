@@ -29,7 +29,7 @@ spring:
               predicates:
                 - Path=/v1/talks/**,/v1/reactions/**
             - id: customer-service
-              uri: ${CUSTOMER_SERVICE_URL:http://localhost:8082}
+              uri: ${MEMBER_SERVICE_URL:http://localhost:8083}
               predicates:
                 - Path=/v1/customer/**
 
