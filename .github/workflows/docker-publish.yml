@@ -62,3 +62,18 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Configure AWS Credentials
+      if: github.event_name != 'pull_request'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Update Manifest and Push to S3
+      if: github.event_name != 'pull_request'
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        sed -i "s/IMAGE_PLACEHOLDER/sha-${SHORT_SHA}/g" k8s/deployment.yaml
+        aws s3 cp k8s/deployment.yaml s3://quietchatter-infra-assets/controlplane/manifests/api-gateway.yaml --region ap-northeast-2
