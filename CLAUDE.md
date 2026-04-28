@@ -1,33 +1,10 @@
 # CLAUDE.md - microservice-api-gateway
 
-이 문서는 Claude Code가 microservice-api-gateway 프로젝트를 이해하고 개발을 돕기 위한 지침입니다.
+작업 전 README.md를 읽으십시오. 서비스 개요, 기술 스택, 라우팅 규칙, 인증 흐름은 README.md에 있습니다.
 
-루트 프로젝트의 CLAUDE.md에 정의된 공통 원칙을 먼저 확인하십시오.
+루트 프로젝트의 CLAUDE.md에 정의된 공통 원칙도 확인하십시오.
 
-## 1. 서비스 개요
-
-- 역할: 모든 외부 HTTP 요청의 단일 진입점
-- 포트: 8080
-
-## 2. 기술 스택
-
-- 언어: Kotlin 1.9.25
-- 프레임워크: Spring Boot 3.5.13, Spring Cloud Gateway MVC (Servlet 기반, Virtual Threads 활성화)
-- 의존성: spring-cloud-starter-gateway-mvc, jjwt, spring-data-redis
-- 라우팅: k8s Service URL 환경변수 기반 정적 라우팅 (MEMBER_SERVICE_URL, BOOK_SERVICE_URL, TALK_SERVICE_URL)
-
-## 3. 아키텍처
-
-Spring Cloud Gateway MVC는 Servlet 기반 필터 체인으로 동작한다.
-
-```
-외부 요청
-  -> AuthenticationFilter (OncePerRequestFilter: 헤더 제거, JWT 검증, X-Member-Id 주입)
-  -> RouteLocator (application.yml 정적 URL 라우팅)
-  -> 다운스트림 마이크로서비스
-```
-
-## 4. 작업 지침
+## 작업 지침
 
 ### A. 코드 작성 규칙
 
@@ -39,7 +16,6 @@ Spring Cloud Gateway MVC는 Servlet 기반 필터 체인으로 동작한다.
 
 - 라우팅은 application.yml에 정적으로 선언된 k8s Service URL을 사용한다.
 - 새 마이크로서비스 연동 시 application.yml routes와 AuthenticationFilter의 bypassPaths/optionalPaths를 함께 수정하십시오.
-- 인증 정책은 AuthenticationFilter.kt의 bypassPaths, optionalPaths 리스트로 관리한다. 실제 경로 목록은 README.md 참조.
 
 ### C. 보안 규칙
 
