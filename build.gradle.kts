@@ -31,6 +31,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     
