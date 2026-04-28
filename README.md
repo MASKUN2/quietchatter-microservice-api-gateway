@@ -1,37 +1,60 @@
-# microservice-api-gateway (QuietChatter Microservice)
+# microservice-api-gateway
 
-이 저장소는 QuietChatter 프로젝트의 API Gateway 서비스입니다.
-JDK 21의 **가상 스레드(Virtual Threads)**와 **Spring Cloud Gateway MVC**를 기반으로 구축되어, 높은 처리 성능과 직관적인 동기식 코드를 동시에 제공합니다.
+QuietChatter 프로젝트의 API Gateway 서비스. 모든 외부 HTTP 요청의 단일 진입점으로 JWT 인증, 라우팅, CORS를 처리한다.
 
-## 핵심 아키텍처 및 기술 스택
+## 기술 스택
 
-- **언어**: Kotlin 1.9.25
-- **프레임워크**: Spring Boot 3.5.13, Spring Cloud Gateway MVC
-- **런타임**: JDK 21 (Virtual Threads 활성화)
-- **서비스 탐색 및 설정**: HashiCorp Consul
-- **데이터 저장소**: Redis (JWT Refresh Token 관리)
-- **인증**: 쿠키 및 헤더 기반 JWT 검증
+- 언어: Kotlin 1.9.25
+- 프레임워크: Spring Boot 3.5.13, Spring Cloud Gateway MVC (Servlet 기반)
+- 런타임: JDK 21 Virtual Threads 활성화
+- 데이터 저장소: Redis (Refresh Token 관리)
+- 포트: 8080
 
-## 주요 기능
+## 라우팅 규칙
 
-1. **동적 라우팅**: Consul에 등록된 마이크로서비스들의 상태를 실시간으로 확인하여 `lb://` 프로토콜을 통한 로드밸런싱을 수행합니다.
-2. **가상 스레드 기반 인증 필터**: 모든 요청에 대해 JWT 유효성을 검사하며, Access Token 만료 시 Refresh Token을 사용해 자동으로 토큰을 갱신합니다.
-3. **보안**: 외부에서 유입되는 `X-Member-Id` 헤더를 차단하고, 인증된 사용자에게만 내부용 식별자 헤더를 추가하여 전달합니다.
-4. **로컬 개발 지원**: `spring-boot-docker-compose`를 통해 로컬 실행 시 Consul과 Redis가 자동으로 구동됩니다.
+라우팅은 k8s Service URL 환경변수 기반 정적 설정이다. application.yml에서 관리한다.
 
-## 로컬 실행 방법
+| 경로 패턴 | 대상 서비스 | 환경변수 |
+|---|---|---|
+| /api/auth/** | microservice-member | MEMBER_SERVICE_URL |
+| /api/members/** | microservice-member | MEMBER_SERVICE_URL |
+| /api/support/** | microservice-member | MEMBER_SERVICE_URL |
+| /api/books/** | microservice-book | BOOK_SERVICE_URL |
+| /api/talks/**, /api/reactions/** | microservice-talk | TALK_SERVICE_URL |
 
-1. **사전 요구 사항**: Docker 및 JDK 21 설치
-2. **애플리케이션 실행**:
-   ```bash
-   ./gradlew bootRun
-   ```
-   - 실행 시 `compose.yaml` 설정에 따라 필요한 인프라(Consul, Redis)가 자동으로 시작됩니다.
-3. **확인**:
-   - Gateway API: http://localhost:8080
-   - Consul 대시보드: http://localhost:8500
+## 인증 정책
 
-## 문서 정보
+AuthenticationFilter(OncePerRequestFilter)가 모든 요청을 검사한다.
 
-- [구현 명세서 (spec.md)](./docs/spec.md): 상세 라우팅 규칙 및 인증 흐름
-- [작업 태스크 (v2.0.0-task.md)](./docs/tasks/v2.0.0-task.md): 현재 스프린트 진행 현황
+- Bypass (인증 불필요): /api/auth/login, /api/auth/signup, /api/auth/reactivate, /api/support, /actuator/health
+- Optional (토큰 있으면 처리, 없어도 통과): /api/books, /api/talks, /api/members/me
+- Required (인증 필수, 없으면 401): 나머지 모든 경로
+
+## 인증 흐름
+
+1. 외부에서 유입된 X-Member-Id 헤더 강제 제거 (헤더 인젝션 방지)
+2. ACCESS_TOKEN 쿠키 확인 후 없으면 Authorization: Bearer 헤더 확인
+3. Access Token 유효: X-Member-Id에 memberId를 담아 다운스트림으로 전달
+4. Access Token 만료: REFRESH_TOKEN 쿠키로 Redis 대조 후 토큰 갱신 및 쿠키 재발급
+5. 토큰 무효 또는 갱신 불가: JSON 에러 응답 (401)
+
+에러 응답 형식:
+
+```json
+{
+  "code": "UNAUTHORIZED",
+  "message": "인증이 필요합니다."
+}
+```
+
+에러 코드: UNAUTHORIZED (토큰 누락/무효), TOKEN_EXPIRED (갱신 토큰까지 만료)
+
+## 로컬 실행
+
+사전 요구 사항: Docker, JDK 21
+
+```bash
+./gradlew bootRun
+```
+
+로컬 실행 시 compose.yaml로 Redis가 자동 구동된다. 환경변수 미설정 시 application.yml의 기본값(localhost:808x)으로 동작한다.
