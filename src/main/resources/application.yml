@@ -16,22 +16,26 @@ spring:
       server:
         webmvc:
           routes:
+            - id: auth-service
+              uri: ${MEMBER_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/auth/**
             - id: member-service
               uri: ${MEMBER_SERVICE_URL:http://localhost:8083}
               predicates:
-                - Path=/v1/auth/**,/v1/me/**
+                - Path=/api/members/**
+            - id: support-service
+              uri: ${MEMBER_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/support/**
             - id: book-service
               uri: ${BOOK_SERVICE_URL:http://localhost:8081}
               predicates:
-                - Path=/v1/books/**
+                - Path=/api/books/**
             - id: talk-service
               uri: ${TALK_SERVICE_URL:http://localhost:8084}
               predicates:
-                - Path=/v1/talks/**,/v1/reactions/**
-            - id: customer-service
-              uri: ${MEMBER_SERVICE_URL:http://localhost:8083}
-              predicates:
-                - Path=/v1/customer/**
+                - Path=/api/talks/**,/api/reactions/**
 
 jwt:
   secret-key: your-very-long-secret-key-at-least-32-chars-long

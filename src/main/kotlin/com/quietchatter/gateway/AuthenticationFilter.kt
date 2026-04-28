@@ -19,8 +19,8 @@ class AuthenticationFilter(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val bypassPaths = listOf("/v1/auth/login", "/v1/auth/signup", "/v1/auth/reactivate", "/v1/customer", "/actuator/health")
-    private val optionalPaths = listOf("/v1/books", "/v1/talks", "/v1/auth/me")
+    private val bypassPaths = listOf("/api/auth/login", "/api/auth/signup", "/api/auth/reactivate", "/api/support", "/actuator/health")
+    private val optionalPaths = listOf("/api/books", "/api/talks", "/api/members/me")
 
     override fun doFilterInternal(
         request: HttpServletRequest,
