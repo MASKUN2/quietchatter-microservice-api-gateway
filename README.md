@@ -28,6 +28,7 @@ AuthenticationFilter(OncePerRequestFilter)가 모든 요청을 검사한다.
 
 - Bypass (인증 불필요): /api/auth/login, /api/auth/signup, /api/auth/reactivate, /api/support, /actuator/health
 - Optional (토큰 있으면 처리, 없어도 통과): /api/books, /api/talks, /api/members/me
+- Forbidden (외부 차단): /internal/** (서비스 간 전용 통로)
 - Required (인증 필수, 없으면 401): 나머지 모든 경로
 
 ## 인증 흐름
@@ -40,6 +41,8 @@ AuthenticationFilter(OncePerRequestFilter)가 모든 요청을 검사한다.
 
 에러 응답 형식:
 
+- **표준 에러**: RFC 7807 (ProblemDetail) 형식을 따릅니다.
+- **인증 에러 (Gateway 레벨)**:
 ```json
 {
   "code": "UNAUTHORIZED",
