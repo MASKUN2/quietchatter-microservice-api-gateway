@@ -33,7 +33,7 @@ class AuthenticationFilterTest {
     @Test
     fun `auth login path should bypass authentication`() {
         // given
-        `when`(request.requestURI).thenReturn("/v1/auth/login")
+        `when`(request.requestURI).thenReturn("/api/auth/login")
 
         // when
         filter.doFilter(request, response, filterChain)
@@ -46,7 +46,8 @@ class AuthenticationFilterTest {
     @Test
     fun `protected path without token should return unauthorized`() {
         // given
-        `when`(request.requestURI).thenReturn("/v1/me/profile")
+        // /api/auth/logout 은 optionalPaths 에 없으므로 토큰 없으면 401
+        `when`(request.requestURI).thenReturn("/api/auth/logout")
         `when`(request.cookies).thenReturn(null)
         `when`(request.getHeader(anyString())).thenReturn(null)
         
@@ -58,6 +59,21 @@ class AuthenticationFilterTest {
 
         // then
         verify(response).status = HttpStatus.UNAUTHORIZED.value()
+        verify(filterChain, never()).doFilter(any(), any())
+    }
+
+    @Test
+    fun `internal path should return forbidden`() {
+        // given
+        `when`(request.requestURI).thenReturn("/internal/api/members/some-id")
+        val writer = mock(java.io.PrintWriter::class.java)
+        `when`(response.writer).thenReturn(writer)
+
+        // when
+        filter.doFilter(request, response, filterChain)
+
+        // then
+        verify(response).status = HttpStatus.FORBIDDEN.value()
         verify(filterChain, never()).doFilter(any(), any())
     }
 }

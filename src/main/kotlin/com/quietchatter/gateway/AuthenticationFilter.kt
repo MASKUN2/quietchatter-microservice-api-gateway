@@ -30,6 +30,12 @@ class AuthenticationFilter(
         val path = request.requestURI
         val wrappedRequest = GatewayHeaderRequestWrapper(request)
 
+        // 0. 내부 경로(/internal) 외부 접근 차단
+        if (path.startsWith("/internal")) {
+            errorResponse(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "내부 경로로의 접근이 금지되었습니다.")
+            return
+        }
+
         // 1. 인증 불필요 경로 확인
         if (bypassPaths.any { path.startsWith(it) }) {
             filterChain.doFilter(wrappedRequest, response)
