@@ -21,7 +21,7 @@ class JwtTokenService(
     @Value("\${jwt.secret-key}") secretKeyString: String,
     private val redisTemplate: StringRedisTemplate
 ) {
-    private val key: SecretKey = Keys.hmacShaKeyFor(secretKeyString.toByteArray())
+    private val key: SecretKey = Keys.hmacShaKeyFor(secretKeyString.toByteArray(Charsets.UTF_8))
     private val jwtParser = Jwts.parser().verifyWith(key).build()
 
     val accessTokenLifeTime: Duration = Duration.ofMinutes(30)

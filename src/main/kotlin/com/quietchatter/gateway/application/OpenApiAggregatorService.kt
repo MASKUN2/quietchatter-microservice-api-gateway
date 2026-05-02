@@ -41,7 +41,7 @@ class OpenApiAggregatorService(
         services.forEach { service ->
             try {
                 val specYaml = restClient.get()
-                    .uri("${service.url}/api/v1/spec")
+                    .uri("${service.url}/api/spec")
                     .retrieve()
                     .body(String::class.java)
 

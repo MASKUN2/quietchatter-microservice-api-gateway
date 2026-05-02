@@ -9,7 +9,10 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
+import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import java.net.URI
 
 @Component
 class AuthenticationFilter(
@@ -18,6 +21,7 @@ class AuthenticationFilter(
 ) : OncePerRequestFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val pathMatcher = AntPathMatcher()
 
     private val bypassPaths = listOf("/api/auth/login", "/api/auth/signup", "/api/auth/reactivate", "/api/support", "/actuator/health")
     private val optionalPaths = listOf("/api/books", "/api/talks", "/api/members/me")
@@ -37,7 +41,7 @@ class AuthenticationFilter(
         }
 
         // 1. 인증 불필요 경로 확인
-        if (bypassPaths.any { path.startsWith(it) }) {
+        if (bypassPaths.any { pathMatcher.match("$it/**", path) || pathMatcher.match(it, path) }) {
             filterChain.doFilter(wrappedRequest, response)
             return
         }
@@ -68,7 +72,7 @@ class AuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        if (optionalPaths.any { path.startsWith(it) }) {
+        if (optionalPaths.any { pathMatcher.match("$it/**", path) || pathMatcher.match(it, path) }) {
             filterChain.doFilter(request, response)
             return
         }
@@ -111,23 +115,19 @@ class AuthenticationFilter(
 
     private fun addTokenCookies(request: HttpServletRequest, response: HttpServletResponse, accessToken: String, refreshToken: String) {
         val isSecure = request.isSecure
+
+        // Jakarta Servlet Cookie는 SameSite를 직접 지원하지 않으므로 헤더를 직접 설정하거나 
+        // 응답 래퍼를 사용해야 하지만, 여기서는 가장 안정적인 Set-Cookie 헤더 직접 추가 방식을 사용합니다.
         
-        val accessCookie = jakarta.servlet.http.Cookie("ACCESS_TOKEN", accessToken).apply {
-            path = "/"
-            isHttpOnly = true
-            secure = isSecure
-            maxAge = jwtTokenService.accessTokenLifeTime.seconds.toInt()
-        }
+        val accessCookieHeader = StringBuilder("ACCESS_TOKEN=$accessToken; Path=/; HttpOnly; Max-Age=${jwtTokenService.accessTokenLifeTime.seconds}")
+        if (isSecure) accessCookieHeader.append("; Secure")
+        accessCookieHeader.append("; SameSite=Lax")
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookieHeader.toString())
 
-        val refreshCookie = jakarta.servlet.http.Cookie("REFRESH_TOKEN", refreshToken).apply {
-            path = "/"
-            isHttpOnly = true
-            secure = isSecure
-            maxAge = jwtTokenService.refreshTokenLifeTime.seconds.toInt()
-        }
-
-        response.addCookie(accessCookie)
-        response.addCookie(refreshCookie)
+        val refreshCookieHeader = StringBuilder("REFRESH_TOKEN=$refreshToken; Path=/; HttpOnly; Max-Age=${jwtTokenService.refreshTokenLifeTime.seconds}")
+        if (isSecure) refreshCookieHeader.append("; Secure")
+        refreshCookieHeader.append("; SameSite=Lax")
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookieHeader.toString())
     }
 
     private fun extractAccessToken(request: HttpServletRequest): String? {
@@ -152,10 +152,13 @@ class AuthenticationFilter(
         message: String
     ) {
         response.status = status.value()
-        response.contentType = MediaType.APPLICATION_JSON_VALUE
+        response.contentType = MediaType.APPLICATION_PROBLEM_JSON_VALUE
         response.characterEncoding = "UTF-8"
 
-        val errorBody = GatewayErrorResponse(code = code, message = message)
-        response.writer.write(objectMapper.writeValueAsString(errorBody))
+        val problemDetail = org.springframework.http.ProblemDetail.forStatusAndDetail(status, message).apply {
+            title = code
+            instance = URI.create(ServletUriComponentsBuilder.fromCurrentRequest().toUriString())
+        }
+        response.writer.write(objectMapper.writeValueAsString(problemDetail))
     }
 }

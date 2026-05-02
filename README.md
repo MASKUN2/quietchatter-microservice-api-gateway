@@ -12,11 +12,18 @@ QuietChatter 프로젝트의 API Gateway 서비스. 모든 외부 HTTP 요청의
 
 ## 환경 변수 및 보안
 
+모든 민감 정보는 k8s Secret(quietchatter-secrets)으로부터 환경 변수로 주입됩니다.
+
 | 변수명 | 설명 | 비고 |
 |---|---|---|
-| JWT_SECRET_KEY | JWT 서명 및 검증용 비밀키 | k8s Secret(quietchatter-secrets) 주입 |
-| INTERNAL_SECRET | 서비스 간 통신용 공유 비밀키 | /internal/** 접근 시 사용 가능성 대비 |
-| REDIS_HOST | Redis 호스트 주소 | 기본값: localhost |
+| JWT_SECRET_KEY | JWT 서명 및 검증용 비밀키 | |
+| INTERNAL_SECRET | 서비스 간 통신용 공유 비밀키 | |
+| MEMBER_SERVICE_URL | 회원 서비스 접속 URL | |
+| BOOK_SERVICE_URL | 도서 서비스 접속 URL | |
+| TALK_SERVICE_URL | 북톡 서비스 접속 URL | |
+| SPRING_DATA_REDIS_HOST | Redis 호스트 주소 | |
+| SPRING_DATA_REDIS_PORT | Redis 포트 번호 | |
+| SPRING_PROFILES_ACTIVE | 활성 프로파일 | prod |
 
 ## 라우팅 규칙
 
@@ -49,16 +56,19 @@ AuthenticationFilter(OncePerRequestFilter)가 모든 요청을 검사한다.
 
 에러 응답 형식:
 
-- **표준 에러**: RFC 7807 (ProblemDetail) 형식을 따릅니다.
-- **인증 에러 (Gateway 레벨)**:
+- 표준 에러: RFC 7807 (ProblemDetail) 형식을 따릅니다.
+- 응답 예시:
 ```json
 {
-  "code": "UNAUTHORIZED",
-  "message": "인증이 필요합니다."
+  "type": "about:blank",
+  "title": "UNAUTHORIZED",
+  "status": 401,
+  "detail": "인증이 필요합니다.",
+  "instance": "/api/auth/me"
 }
 ```
 
-에러 코드: UNAUTHORIZED (토큰 누락/무효), TOKEN_EXPIRED (갱신 토큰까지 만료)
+에러 코드 (title 필드): UNAUTHORIZED (토큰 누락/무효), TOKEN_EXPIRED (갱신 토큰까지 만료), FORBIDDEN (내부 경로 접근)
 
 ## 로컬 실행
 
