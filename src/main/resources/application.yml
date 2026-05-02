@@ -38,7 +38,7 @@ spring:
                 - Path=/api/talks/**,/api/reactions/**
 
 jwt:
-  secret-key: your-very-long-secret-key-at-least-32-chars-long
+  secret-key: ${JWT_SECRET_KEY:your-very-long-secret-key-at-least-32-chars-long}
 
 app:
   cors:

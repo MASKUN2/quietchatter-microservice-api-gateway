@@ -10,6 +10,14 @@ QuietChatter 프로젝트의 API Gateway 서비스. 모든 외부 HTTP 요청의
 - 데이터 저장소: Redis (Refresh Token 관리)
 - 포트: 8080
 
+## 환경 변수 및 보안
+
+| 변수명 | 설명 | 비고 |
+|---|---|---|
+| JWT_SECRET_KEY | JWT 서명 및 검증용 비밀키 | k8s Secret(quietchatter-secrets) 주입 |
+| INTERNAL_SECRET | 서비스 간 통신용 공유 비밀키 | /internal/** 접근 시 사용 가능성 대비 |
+| REDIS_HOST | Redis 호스트 주소 | 기본값: localhost |
+
 ## 라우팅 규칙
 
 라우팅은 k8s Service URL 환경변수 기반 정적 설정이다. application.yml에서 관리한다.

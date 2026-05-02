@@ -32,6 +32,16 @@ spec:
               value: redis.quietchatter.svc.cluster.local
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: quietchatter-secrets
+                  key: JWT_SECRET_KEY
+            - name: INTERNAL_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: quietchatter-secrets
+                  key: INTERNAL_SECRET
             - name: MEMBER_SERVICE_URL
               value: http://member.quietchatter.svc.cluster.local:8083
             - name: BOOK_SERVICE_URL
