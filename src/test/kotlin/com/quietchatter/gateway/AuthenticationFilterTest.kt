@@ -33,59 +33,18 @@ class AuthenticationFilterTest {
     }
 
     @Test
-    fun `health check path should bypass authentication`() {
-        // given
-        `when`(request.requestURI).thenReturn("/actuator/health")
-
-        // when
-        filter.doFilter(request, response, filterChain)
-
-        // then
-        verify(filterChain).doFilter(any(), eq(response))
-        verify(response, never()).status = HttpStatus.UNAUTHORIZED.value()
-    }
-
-    @Test
-    fun `auth login path should bypass authentication`() {
-        // given
-        `when`(request.requestURI).thenReturn("/api/auth/login")
-
-        // when
-        filter.doFilter(request, response, filterChain)
-
-        // then
-        verify(filterChain).doFilter(any(), eq(response))
-        verify(response, never()).status = HttpStatus.UNAUTHORIZED.value()
-    }
-
-    @Test
-    fun `auth signup path with subpath should bypass authentication`() {
-        // given
-        `when`(request.requestURI).thenReturn("/api/auth/login/naver")
-
-        // when
-        filter.doFilter(request, response, filterChain)
-
-        // then
-        verify(filterChain).doFilter(any(), eq(response))
-    }
-
-    @Test
-    fun `protected path without token should return unauthorized`() {
+    fun `request without token should pass through without X-Member-Id header`() {
         // given
         `when`(request.requestURI).thenReturn("/api/auth/logout")
         `when`(request.cookies).thenReturn(null)
         `when`(request.getHeader(anyString())).thenReturn(null)
-        
-        val writer = mock(java.io.PrintWriter::class.java)
-        `when`(response.writer).thenReturn(writer)
 
         // when
         filter.doFilter(request, response, filterChain)
 
         // then
-        verify(response).status = HttpStatus.UNAUTHORIZED.value()
-        verify(filterChain, never()).doFilter(any(), any())
+        verify(filterChain).doFilter(any(), eq(response))
+        verify(response, never()).status = HttpStatus.UNAUTHORIZED.value()
     }
 
     @Test

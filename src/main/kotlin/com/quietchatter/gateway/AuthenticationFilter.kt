@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
-import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.net.URI
@@ -21,40 +20,26 @@ class AuthenticationFilter(
 ) : OncePerRequestFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val pathMatcher = AntPathMatcher()
-
-    private val bypassPaths = listOf("/api/auth/login", "/api/auth/signup", "/api/auth/reactivate", "/api/support", "/actuator/health")
-    private val optionalPaths = listOf("/api/books", "/api/talks", "/api/auth/me", "/api/members/me")
 
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val path = request.requestURI
         val wrappedRequest = GatewayHeaderRequestWrapper(request)
 
-        // 0. 내부 경로(/internal) 외부 접근 차단
-        if (path.startsWith("/internal")) {
+        if (request.requestURI.startsWith("/internal")) {
             errorResponse(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "내부 경로로의 접근이 금지되었습니다.")
             return
         }
 
-        // 1. 인증 불필요 경로 확인
-        if (bypassPaths.any { pathMatcher.match("$it/**", path) || pathMatcher.match(it, path) }) {
+        val accessToken = extractAccessToken(request)
+
+        if (accessToken == null) {
             filterChain.doFilter(wrappedRequest, response)
             return
         }
 
-        // 2. 토큰 추출
-        val accessToken = extractAccessToken(request)
-
-        if (accessToken == null) {
-            handleNoToken(path, wrappedRequest, response, filterChain)
-            return
-        }
-
-        // 3. Access Token 검증 및 처리
         try {
             val memberId = jwtTokenService.validateAndGetMemberId(accessToken)
             wrappedRequest.setMemberIdHeader(memberId)
@@ -64,19 +49,6 @@ class AuthenticationFilter(
         } catch (e: InvalidAuthTokenException) {
             errorResponse(response, HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "유효하지 않은 토큰입니다.")
         }
-    }
-
-    private fun handleNoToken(
-        path: String,
-        request: GatewayHeaderRequestWrapper,
-        response: HttpServletResponse,
-        filterChain: FilterChain
-    ) {
-        if (optionalPaths.any { pathMatcher.match("$it/**", path) || pathMatcher.match(it, path) }) {
-            filterChain.doFilter(request, response)
-            return
-        }
-        errorResponse(response, HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증이 필요합니다.")
     }
 
     private fun handleRefreshToken(

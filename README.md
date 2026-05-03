@@ -41,18 +41,22 @@ QuietChatter 프로젝트의 API Gateway 서비스. 모든 외부 HTTP 요청의
 
 AuthenticationFilter(OncePerRequestFilter)가 모든 요청을 검사한다.
 
-- Bypass (인증 불필요): /api/auth/login, /api/auth/signup, /api/auth/reactivate, /api/support, /actuator/health
-- Optional (토큰 있으면 처리, 없어도 통과): /api/books, /api/talks, /api/members/me
-- Forbidden (외부 차단): /internal/** (서비스 간 전용 통로)
-- Required (인증 필수, 없으면 401): 나머지 모든 경로
+- Forbidden (외부 차단): /internal/** → 403. 서비스 간 내부 통신 전용 경로.
+- 토큰 있음: X-Member-Id 헤더에 memberId(UUID)를 담아 다운스트림으로 전달.
+- 토큰 없음: X-Member-Id 헤더를 전송하지 않음. 빈 문자열이 아닌 헤더 미포함.
+- 토큰 만료: Refresh Token으로 갱신 후 통과. 갱신 불가 시 401.
+- 토큰 무효: 401.
+
+인증 필요 여부의 판단은 게이트웨이가 아닌 각 다운스트림 서비스가 담당한다. 인증 필수 엔드포인트는 X-Member-Id 헤더가 없을 때 GlobalExceptionHandler에서 401을 반환한다.
 
 ## 인증 흐름
 
 1. 외부에서 유입된 X-Member-Id 헤더 강제 제거 (헤더 인젝션 방지)
 2. ACCESS_TOKEN 쿠키 확인 후 없으면 Authorization: Bearer 헤더 확인
 3. Access Token 유효: X-Member-Id에 memberId를 담아 다운스트림으로 전달
-4. Access Token 만료: REFRESH_TOKEN 쿠키로 Redis 대조 후 토큰 갱신 및 쿠키 재발급
-5. 토큰 무효 또는 갱신 불가: JSON 에러 응답 (401)
+4. Access Token 없음: X-Member-Id 헤더 없이 다운스트림으로 전달
+5. Access Token 만료: REFRESH_TOKEN 쿠키로 Redis 대조 후 토큰 갱신 및 쿠키 재발급
+6. 토큰 무효 또는 갱신 불가: JSON 에러 응답 (401)
 
 에러 응답 형식:
 

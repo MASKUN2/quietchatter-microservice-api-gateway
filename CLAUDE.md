@@ -15,7 +15,7 @@
 ### B. 라우팅 규칙
 
 - 라우팅은 application.yml에 정적으로 선언된 k8s Service URL을 사용한다.
-- 새 마이크로서비스 연동 시 application.yml routes와 AuthenticationFilter의 bypassPaths/optionalPaths를 함께 수정하십시오.
+- 새 마이크로서비스 연동 시 application.yml routes만 수정하십시오. AuthenticationFilter에 경로별 예외 목록(bypassPaths/optionalPaths)은 없습니다. 인증 필요 여부는 각 서비스가 담당합니다.
 
 ### C. 보안 규칙
 
