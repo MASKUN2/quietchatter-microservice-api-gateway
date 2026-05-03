@@ -11,6 +11,7 @@
 - Spring Cloud Gateway MVC + Virtual Threads 환경이므로 동기식 블로킹 코드가 기본이다. Reactive 코드(Mono, Flux) 작성 금지.
 - JWT 검증 로직은 JwtTokenService.kt와 AuthenticationFilter.kt를 참고하십시오.
 - 새로운 코드를 작성하거나 수정할 때 단위 테스트를 함께 작성하고 통과를 확인하십시오.
+- 파일 치환(replace) 시 퍼지 매칭(Fuzzy Match)으로 인한 의도치 않은 코드 삭제를 막기 위해, 항상 파일 원본을 먼저 읽고 정확한 대상 문자열을 지정하십시오.
 
 ### B. 라우팅 규칙
 
