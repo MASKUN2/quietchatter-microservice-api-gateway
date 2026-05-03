@@ -24,7 +24,7 @@ class AuthenticationFilter(
     private val pathMatcher = AntPathMatcher()
 
     private val bypassPaths = listOf("/api/auth/login", "/api/auth/signup", "/api/auth/reactivate", "/api/support", "/actuator/health")
-    private val optionalPaths = listOf("/api/books", "/api/talks", "/api/members/me")
+    private val optionalPaths = listOf("/api/books", "/api/talks", "/api/auth/me", "/api/members/me")
 
     override fun doFilterInternal(
         request: HttpServletRequest,
