@@ -77,3 +77,11 @@ jobs:
         SHORT_SHA=${GITHUB_SHA::7}
         sed -i "s/IMAGE_PLACEHOLDER/sha-${SHORT_SHA}/g" k8s/deployment.yaml
         aws s3 cp k8s/deployment.yaml s3://quietchatter-infra-assets/controlplane/manifests/api-gateway.yaml --region ap-northeast-2
+
+    - name: Notify deployment
+      if: github.event_name != 'pull_request'
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+          -H 'Content-type: application/json' \
+          -d "{\"content\":\"[배포] ${{ github.repository }} sha-${SHORT_SHA} → S3 반영 완료. k3s 적용까지 최대 5분 소요.\"}"
