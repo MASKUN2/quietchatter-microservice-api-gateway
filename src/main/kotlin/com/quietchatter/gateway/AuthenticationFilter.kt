@@ -36,7 +36,12 @@ class AuthenticationFilter(
         val accessToken = extractAccessToken(request)
 
         if (accessToken == null) {
-            filterChain.doFilter(wrappedRequest, response)
+            val refreshToken = extractRefreshToken(request)
+            if (refreshToken != null) {
+                handleRefreshToken(wrappedRequest, response, filterChain)
+            } else {
+                filterChain.doFilter(wrappedRequest, response)
+            }
             return
         }
 
