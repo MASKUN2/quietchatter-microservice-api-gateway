@@ -25,6 +25,26 @@ QuietChatter 프로젝트의 API Gateway 서비스. 모든 외부 HTTP 요청의
 | SPRING_DATA_REDIS_PORT | Redis 포트 번호 | |
 | SPRING_PROFILES_ACTIVE | 활성 프로파일 | prod |
 
+## 패키지 구조
+
+```text
+com.quietchatter.gateway/
+  AppCorsProperties.kt
+  AuthenticationFilter.kt
+  CorsConfig.kt
+  GatewayApplication.kt
+  GatewayHeaderRequestWrapper.kt
+  JwtTokenService.kt
+  adaptor/in/web/       OpenApiController.kt
+  application/          OpenApiAggregatorService.kt
+```
+
+## API 명세
+
+| 경로 | 설명 |
+|---|---|
+| /api/docs/openapi.yaml | 여러 다운스트림 서비스(member, book, talk)의 OpenAPI 명세를 하나로 취합하여 반환 |
+
 ## 라우팅 규칙
 
 라우팅은 k8s Service URL 환경변수 기반 정적 설정이다. application.yml에서 관리한다.
